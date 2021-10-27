@@ -58,6 +58,7 @@ def refresh_one_token(_state: str, _force: bool = False):
         sql_connection.commit()
         sql_connection.close()
         raise e
+
     sql_connection.close()
 
 
@@ -68,4 +69,5 @@ def refresh_all_suitable_tokens():
     for state in suitable_tokens.fetchall():
         state = state[0]
         refresh_one_token(state)
+
     sql_connection.close()

@@ -87,6 +87,7 @@ class Authorize:
             sql_connection.execute(
                 "insert into authorizations (code_verifier, state, timestamp_init) values "
                 "(?, ?, ?);", [code_verifier.decode('utf-8'), state_string, int(time.time())])
+
         sql_connection.close()
         resp.content_type = falcon.MEDIA_HTML
         resp.text = REDIRECT_HTML_TEMPLATE.format(link=redirect_user_to)
@@ -107,6 +108,7 @@ class FDEV_redirect:
         if code_verifier is None:
             # Somebody got here not by frontier redirect
             raise falcon.HTTPBadRequest(description="Don't show here without passing frontier authorization!")
+
         code_verifier = code_verifier[0]
 
         with sql_connection:
@@ -121,8 +123,10 @@ class FDEV_redirect:
         if token_request.status_code != 200:
             # Something went wrong
             print(f"error_id: {error_id}\n{token_request.text}")
+
             with sql_connection:
                 sql_connection.execute("delete from authorizations where state = ?;", [state])
+
             sql_connection.close()
             raise falcon.HTTPBadRequest(description=f'Something went wrong, your error id is {error_id}')
 
@@ -146,6 +150,7 @@ class FDEV_redirect:
             try:
                 sql_connection.execute("update authorizations set nickname = ? where state = ?;", [nickname, state])
                 sql_connection.commit()
+
             except sqlite3.IntegrityError:
                 already_saved_state = sql_connection.execute(
                     "select state from authorizations where nickname = ?", [nickname]).fetchone()[0]
@@ -160,6 +165,7 @@ class FDEV_redirect:
             print(f"error_id: {error_id}\n{e}")
             with sql_connection:
                 sql_connection.execute("delete from authorizations where state = ?;", [state])
+
         else:  # all fine
             resp.text = f"All right, {nickname}, we have your tokens\nSave and keep this key: {state}"
         sql_connection.close()
@@ -208,6 +214,7 @@ class Admin:
             raise falcon.HTTPNotFound(description="You aren't an admin")
 
         users_html = ""
+
         for user in sql_connection.execute(
                 'select nickname, state from authorizations where nickname is not null;').fetchall():
             user_name = user[0]
