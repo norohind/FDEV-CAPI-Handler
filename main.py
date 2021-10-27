@@ -226,6 +226,38 @@ class Admin:
         sql_connection.close()
 
 
+class RandomToken:
+    def on_get(self, req: falcon.request.Request, resp: falcon.response.Response):
+        access_key = req.headers.get('AUTH')
+
+        if access_key != 'hEjesv79YUZNeQgJ':
+            raise falcon.HTTPNotFound
+
+        sql_connection = sqlite3.connect(database="companion-api.sqlite")
+        random_token = sql_connection.execute(
+            'select state from authorizations where nickname is not null limit 1;',()).fetchone()
+
+        if random_token is None:
+            sql_connection.close()
+            raise falcon.HTTPNotFound(description="DB is empty")
+
+        state = random_token[0]
+
+        refresh_one_token(state)
+
+        access_token, expires_timestamp, nickname = sql_connection.execute(
+            'select access_token, timestamp_got_expires_in + expires_in, nickname from authorizations where state = ?',
+            [state]).fetchone()
+
+        import json
+        resp.text = json.dumps({'access_token': access_token,
+                                'expires_over': expires_timestamp - int(time.time()),
+                                'expires_on': expires_timestamp,
+                                'nickname': nickname})
+        resp.content_type = falcon.MEDIA_JSON
+        sql_connection.close()
+
+
 app = falcon.App()
 
 # routing
@@ -233,5 +265,6 @@ app.add_route('/authorize', Authorize())
 app.add_route('/fdev-redirect', FDEV_redirect())
 app.add_route('/users/{user}', User())
 app.add_route('/admin/{_state}', Admin())
+app.add_route('/random_token', RandomToken())
 
 waitress.serve(app, host='127.0.0.1', port=9000)
