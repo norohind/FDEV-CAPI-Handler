@@ -6,11 +6,11 @@ from os import getenv
 CLIENT_ID = getenv('client_id')
 assert CLIENT_ID, "No client_id in env"
 
-log_level = 'DEBUG'
+log_level = os.getenv('LOG_LEVEL', 'DEBUG').upper()
 
 access_key = os.getenv('access_key')
 
-REDIRECT_URL = requests.utils.quote("http://127.0.0.1:9000/fdev-redirect")
+REDIRECT_URL = requests.utils.quote(os.getenv('REDIRECT_URL'))
 AUTH_URL = 'https://auth.frontierstore.net/auth'
 TOKEN_URL = 'https://auth.frontierstore.net/token'
 PROPER_USER_AGENT = 'EDCD-a31-0.2'
@@ -27,16 +27,3 @@ REDIRECT_HTML_TEMPLATE = """
     </body>
 </html>
 """
-
-ADMIN_USERS_TEMPLATE = """
-<!DOCTYPE HTML>
-<html>
-    <head>
-    </head>
-    <body>
-        {}
-    </body>
-</html>
-"""
-
-ADMIN_USER_TEMPLATE = '<a href="{link}">{desc}</a>'
