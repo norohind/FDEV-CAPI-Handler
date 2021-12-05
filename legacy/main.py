@@ -37,7 +37,7 @@ logger.addHandler(stdout_handler)
 Typical workflow:
 1. User open Authorize endpoint
 2. Authorize building link for FDEV's /auth, sending link to user
-3. Authorize write code_verifier, state, timestamp_init to DB
+3. Authorize write code_verifier, state, timestamp_init (by DBMS) to DB
 4. User approving client, redirecting to FDEV_redirect endpoint
 5. Searching in DB if we have record with this state
     if don't have:
