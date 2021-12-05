@@ -115,3 +115,7 @@ class Model:
 
     def list_all_records(self) -> list:
         return self.db.execute(sqlite_requests.select_nickname_state_all).fetchall()
+
+    def cleanup_orphans_records(self) -> None:
+        with self.db:
+            self.db.execute(sqlite_requests.del_orphans)

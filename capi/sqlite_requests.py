@@ -46,3 +46,5 @@ get_token_for_user = """select
 from authorizations where state = :state;"""
 
 select_nickname_state_all = """select nickname, state from authorizations where nickname is not null;"""
+
+del_orphans = """delete from authorizations where nickname is null;"""

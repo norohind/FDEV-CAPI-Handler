@@ -5,6 +5,7 @@ from . import exceptions
 import base64
 import os
 import time
+from typing import Union
 
 import config
 from EDMCLogging import get_main_logger
@@ -92,9 +93,13 @@ class CAPIAuthorizer:
 
         return msg
 
-    def get_token_by_state(self, state: str) -> dict:
+    def get_token_by_state(self, state: str) -> Union[dict, None]:
         self.refresh_by_state(state)
         row = self.model.get_token_for_user(state)
+
+        if row is None:
+            return None
+
         row['expires_over'] = int(row['expires_on']) - int(time.time())
         return row
 
@@ -113,7 +118,7 @@ class CAPIAuthorizer:
         if row is None:
             # No such state in DB
             msg['status'] = 'error'
-            msg['message'] = 'No such state in DB'
+            msg['description'] = 'No such state in DB'
             raise exceptions.RefreshFail(msg['description'], msg['status'], state)
 
         msg['state'] = state
@@ -162,6 +167,9 @@ class CAPIAuthorizer:
 
     def list_all_users(self) -> list[dict]:
         return self.model.list_all_records()
+
+    def cleanup_orphans(self) -> None:
+        self.model.cleanup_orphans_records()
 
 
 capi_authorizer = CAPIAuthorizer(model.Model())

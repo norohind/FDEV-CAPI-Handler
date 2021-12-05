@@ -1,3 +1,5 @@
+import os
+
 import requests
 from os import getenv
 
@@ -5,6 +7,8 @@ CLIENT_ID = getenv('client_id')
 assert CLIENT_ID, "No client_id in env"
 
 log_level = 'DEBUG'
+
+access_key = os.getenv('access_key')
 
 REDIRECT_URL = requests.utils.quote("http://127.0.0.1:9000/fdev-redirect")
 AUTH_URL = 'https://auth.frontierstore.net/auth'

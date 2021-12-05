@@ -3,4 +3,4 @@ class RefreshFail(Exception):
         self.message = message
         self.status = status
         self.state = state
-        super().__init__(self.message + ' for ' + self.state)
+        super().__init__(str(self.message) + ' for ' + str(self.state))

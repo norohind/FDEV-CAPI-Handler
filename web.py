@@ -4,6 +4,16 @@ import json
 
 from capi import capi_authorizer
 import config
+from EDMCLogging import get_main_logger
+
+logger = get_main_logger()
+logger.propagate = False
+
+
+def check_secret(req: falcon.request.Request, resp: falcon.response.Response, resource, params) -> None:
+    cookies_secret = req.get_cookie_values('key')
+    if cookies_secret[0] != config.access_key:
+        raise falcon.HTTPForbidden
 
 
 class AuthInit:
@@ -16,14 +26,70 @@ class FDEVCallback:
     def on_get(self, req: falcon.request.Request, resp: falcon.response.Response) -> None:
         code = req.get_param('code')
         state = req.get_param('state')
-        msg = capi_authorizer.fdev_callback(code, state)
+        try:
+            msg = capi_authorizer.fdev_callback(code, state)
+            resp.content_type = falcon.MEDIA_JSON
+            resp.text = json.dumps(msg)
+
+        except KeyError as e:
+            logger.warning(f'Exception on FDEVCallback, code: {code!r}, state: {state!r}', exc_info=e)
+            raise falcon.HTTPNotFound(description=str(e))
+
+        except Exception as e:
+            logger.warning(f'Exception on FDEVCallback, code: {code!r}, state: {state!r}', exc_info=e)
+            raise falcon.HTTPBadRequest(description=str(e))
+
+
+class TokenByState:
+    def on_get(self, req: falcon.request.Request, resp: falcon.response.Response, state: str) -> None:
         resp.content_type = falcon.MEDIA_JSON
-        resp.text = json.dumps(msg)
+        tokens = capi_authorizer.get_token_by_state(state)
+        if tokens is None:
+            raise falcon.HTTPNotFound(description='No such state found')
+
+        resp.text = json.dumps(tokens)
+
+    def on_delete(self, req: falcon.request.Request, resp: falcon.response.Response, state: str):
+        tokens = capi_authorizer.get_token_by_state(state)
+        if tokens is None:
+            raise falcon.HTTPNotFound(description='No such state found')
+
+        capi_authorizer.delete_by_state(state)
+
+
+class TokenByNickname:
+    @falcon.before(check_secret)
+    def on_get(self, req: falcon.request.Request, resp: falcon.response.Response, nickname: str):
+        resp.content_type = falcon.MEDIA_JSON
+        state = capi_authorizer.model.get_state_by_nickname(nickname)
+        if state is None:
+            raise falcon.HTTPNotFound(description='No such nickname found')
+
+        tokens = capi_authorizer.get_token_by_state(state)
+
+        resp.text = json.dumps(tokens)
+
+    @falcon.before(check_secret)
+    def on_delete(self, req: falcon.request.Request, resp: falcon.response.Response, nickname: str):
+        state = capi_authorizer.model.get_state_by_nickname(nickname)
+        if state is None:
+            raise falcon.HTTPNotFound(description='No such nickname found')
+
+        capi_authorizer.delete_by_state(state)
+
+
+class CleanOrphanRecords:
+    def on_post(self, req: falcon.request.Request, resp: falcon.response.Response):
+        capi_authorizer.cleanup_orphans()
 
 
 application = falcon.App()
 application.add_route('/authorize', AuthInit())
 application.add_route('/fdev-redirect', FDEVCallback())
+application.add_route('/users/{state}', TokenByState())  # for legacy reasons
+application.add_route('/users/by-state/{state}', TokenByState())
+application.add_route('/users/by-nickname/{nickname}', TokenByNickname())
+application.add_route('/tools/clean-orphan-records', CleanOrphanRecords())
 
 if __name__ == '__main__':
     waitress.serve(application, host='127.0.0.1', port=9000)
