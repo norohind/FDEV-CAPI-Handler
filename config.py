@@ -10,7 +10,7 @@ log_level = os.getenv('LOG_LEVEL', 'DEBUG').upper()
 
 access_key = os.getenv('access_key')
 
-REDIRECT_URL = requests.utils.quote(os.getenv('REDIRECT_URL'))
+REDIRECT_URL = requests.utils.quote(os.getenv('REDIRECT_URL', ''))
 AUTH_URL = 'https://auth.frontierstore.net/auth'
 TOKEN_URL = 'https://auth.frontierstore.net/token'
 PROPER_USER_AGENT = 'EDCD-a31-0.2'
