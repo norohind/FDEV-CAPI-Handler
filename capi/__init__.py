@@ -1,3 +1,5 @@
+import requests
+
 from . import model
 from . import utils
 from . import exceptions
@@ -146,9 +148,15 @@ class CAPIAuthorizer:
             msg['description'] = 'Token were successfully updated'
             return msg
 
+        except requests.ConnectionError as e:
+            logger.warning(f'Connection problem on refresh for {state!r}', exc_info=e)
+            msg['status'] = 'error'
+            msg['description'] = 'Connection Error'
+            raise exceptions.RefreshFail(msg['description'], msg['status'], state)
+
         except Exception as e:
             # probably here something don't work
-            logger.warning(f'Fail on refreshing token for {state}, row:{row}')
+            logger.warning(f'Fail on refreshing token for {state!r}, row:{row}', exc_info=e)
             msg['status'] = 'error'
 
             self.model.increment_refresh_tries(state)
