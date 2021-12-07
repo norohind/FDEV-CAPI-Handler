@@ -95,8 +95,16 @@ class RandomToken:
     # for legacy reasons
     @falcon.before(check_secret)
     def on_get(self, req: falcon.request.Request, resp: falcon.response.Response):
+        resp.content_type = falcon.MEDIA_JSON
         import random
-        random_state = random.choice(capi_authorizer.list_all_users())
+        list_users = capi_authorizer.list_all_users()
+
+        if len(list_users) == 0:
+            raise falcon.HTTPNotFound(description='No users in DB')
+
+        random_user = random.choice(list_users)
+
+        resp.text = json.dumps(capi_authorizer.get_token_by_state(random_user['state']))
 
 
 application = falcon.App()
