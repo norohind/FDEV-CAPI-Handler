@@ -12,7 +12,8 @@ logger.propagate = False
 
 def check_secret(req: falcon.request.Request, resp: falcon.response.Response, resource, params) -> None:
     cookies_secret = req.get_cookie_values('key')
-    if cookies_secret[0] != config.access_key:
+
+    if cookies_secret is None or cookies_secret[0] != config.access_key:
         raise falcon.HTTPForbidden
 
 
@@ -83,12 +84,29 @@ class CleanOrphanRecords:
         capi_authorizer.cleanup_orphans()
 
 
+class ListTokens:
+    @falcon.before(check_secret)
+    def on_get(self, req: falcon.request.Request, resp: falcon.response.Response):
+        resp.content_type = falcon.MEDIA_JSON
+        resp.text = json.dumps(capi_authorizer.list_all_users())
+
+
+class RandomToken:
+    # for legacy reasons
+    @falcon.before(check_secret)
+    def on_get(self, req: falcon.request.Request, resp: falcon.response.Response):
+        import random
+        random_state = random.choice(capi_authorizer.list_all_users())
+
+
 application = falcon.App()
 application.add_route('/authorize', AuthInit())
 application.add_route('/fdev-redirect', FDEVCallback())
 application.add_route('/users/{state}', TokenByState())  # for legacy reasons
+application.add_route('/random_token', RandomToken())  # for legacy reasons, subject to decommissioning
 application.add_route('/users/by-state/{state}', TokenByState())
 application.add_route('/users/by-nickname/{nickname}', TokenByNickname())
+application.add_route('/users', ListTokens())
 application.add_route('/tools/clean-orphan-records', CleanOrphanRecords())
 
 if __name__ == '__main__':
