@@ -142,8 +142,13 @@ class CAPIAuthorizer:
             refresh_request.raise_for_status()
 
             tokens = refresh_request.json()
-            tokens['timestamp_got_expires_in'] = int(time.time())
-            self.model.set_tokens(*tokens, state)
+            self.model.set_tokens(
+                access_token=tokens["access_token"],
+                refresh_token=tokens["refresh_token"],
+                expires_in=tokens["expires_in"],
+                timestamp_got_expires_in=int(time.time()),
+                state=state
+            )
             msg['status'] = 'ok'
             msg['description'] = 'Token were successfully updated'
             return msg
