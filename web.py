@@ -11,10 +11,13 @@ logger.propagate = False
 
 
 def check_secret(req: falcon.request.Request, resp: falcon.response.Response, resource, params) -> None:
-    cookies_secret = req.headers.get('AUTH')
+    header_secret = req.headers.get('AUTH')  # for legacy reasons
 
-    if cookies_secret != config.access_key:
-        raise falcon.HTTPForbidden
+    cookies_secret = req.get_cookie_values('key')
+
+    if header_secret != config.access_key:
+        if cookies_secret is None or cookies_secret[0] != config.access_key:
+            raise falcon.HTTPForbidden
 
 
 class AuthInit:
