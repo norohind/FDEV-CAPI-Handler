@@ -125,7 +125,9 @@ class CAPIAuthorizer:
 
         msg['state'] = state
 
-        if int(time.time()) < int(row['timestamp_got_expires_in']) + int(row['expires_in']) and not force_refresh:
+        if int(time.time()) < int(row['timestamp_got_expires_in']) + int(row['expires_in'] - 400) and not force_refresh:
+            # current time < when we got token + token lifetime - 400, 400 is need just to refresh token on 400 secs
+            # earlier than lifetime stated by FDEV, for safe
             msg['status'] = 'ok'
             msg['description'] = "Didn't refresh since it isn't required"
 
