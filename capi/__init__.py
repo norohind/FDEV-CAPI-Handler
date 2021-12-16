@@ -163,7 +163,15 @@ class CAPIAuthorizer:
 
         except Exception as e:
             # probably here something don't work
-            logger.warning(f'Fail on refreshing token for {state!r}, row:{row}', exc_info=e)
+            text = ''
+            try:
+                text = refresh_request.text
+
+            except Exception as e1:
+                text = f"can't get text because {e1}"
+
+            logger.warning(
+                f'Fail on refreshing token for {state!r}, row:{row!r}, text: {text}', exc_info=e)
             msg['status'] = 'error'
 
             self.model.increment_refresh_tries(state)
