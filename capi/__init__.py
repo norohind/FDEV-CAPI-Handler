@@ -103,6 +103,7 @@ class CAPIAuthorizer:
             return None
 
         row['expires_over'] = int(row['expires_on']) - int(time.time())
+
         return row
 
     def refresh_by_state(self, state: str, force_refresh=False, failure_tolerance=True) -> dict:

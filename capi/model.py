@@ -111,7 +111,12 @@ class Model:
             self.db.execute(sqlite_requests.refresh_times_increment, {'state': state})
 
     def get_token_for_user(self, state: str) -> dict:
-        return self.db.execute(sqlite_requests.get_token_for_user, {'state': state}).fetchone()
+        sql_params = {'state': state}
+        token = self.db.execute(sqlite_requests.get_token_for_user, sql_params).fetchone()
+        with self.db:
+            self.db.execute(sqlite_requests.increment_usages, sql_params)
+
+        return token
 
     def list_all_records(self) -> list:
         return self.db.execute(sqlite_requests.select_nickname_state_all).fetchall()

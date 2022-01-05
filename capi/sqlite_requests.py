@@ -8,7 +8,8 @@ schema = """create table if not exists authorizations (
     expires_in text, 
     timestamp_got_expires_in text, 
     nickname text unique,
-    refresh_tries int default 0
+    refresh_tries int default 0,
+    usages int default 0
 );"""
 
 insert_auth_init = """insert into authorizations 
@@ -48,3 +49,5 @@ from authorizations where state = :state;"""
 select_nickname_state_all = """select nickname, state from authorizations where nickname is not null;"""
 
 del_orphans = """delete from authorizations where nickname is null;"""
+
+increment_usages = "update authorizations set usages = usages + 1 where state = :state;"
