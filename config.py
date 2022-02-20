@@ -13,7 +13,7 @@ access_key = os.getenv('access_key')
 REDIRECT_URL = requests.utils.quote(os.getenv('REDIRECT_URL', ''))
 AUTH_URL = 'https://auth.frontierstore.net/auth'
 TOKEN_URL = 'https://auth.frontierstore.net/token'
-PROPER_USER_AGENT = 'EDCD-a31-0.2'
+PROPER_USER_AGENT = 'EDCD-a31-0.3'
 REDIRECT_HTML_TEMPLATE = """
 <!DOCTYPE HTML>
 <html>

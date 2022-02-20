@@ -76,27 +76,35 @@ class CAPIAuthorizer:
 
         self.model.set_tokens(access_token, refresh_token, expires_in, timestamp_got_expires_in, state)
 
-        try:
-            nickname = utils.get_nickname(access_token)
+        nickname = utils.get_nickname(access_token)
+        self.model.set_nickname(nickname, state)
+        if nickname is None:
+            logger.warning(f"Couldn't get or set nickname for state: {state!r}")  # msg inform: no nickname
 
-        except Exception as e:
-            logger.warning(f"Couldn't get nickname for state: {state!r}", exc_info=e)
-            raise KeyError(f"Couldn't get nickname for state: {state!r}")
+        fid = utils.get_fid(access_token)
+        if fid is None:
+            logger.error(f"Couldn't get FID for state: {state!r}")
+            raise exceptions.NoFID(f'No FID for {state!r}')
 
         msg = {'status': 'ok', 'description': '', 'state': ''}
 
-        if not self.model.set_nickname(nickname, state):
+        if not self.model.set_fid(fid, state):
             msg['description'] = 'Tokens updated'
 
         else:
             msg['description'] = 'Tokens saved'
 
-        msg['state'] = self.model.get_state_by_nickname(nickname)
+        msg['state'] = self.model.get_state_by_fid(fid)
 
         return msg
 
     def get_token_by_state(self, state: str) -> Union[dict, None]:
-        self.refresh_by_state(state)
+        try:
+            self.refresh_by_state(state)
+
+        except exceptions.CAPIException:
+            return None
+
         row = self.model.get_token_for_user(state)
 
         if row is None:
@@ -189,11 +197,14 @@ class CAPIAuthorizer:
     def delete_by_state(self, state: str) -> None:
         self.model.delete_row(state)
 
-    def list_all_users(self) -> list[dict]:
-        return self.model.list_all_records()
+    def list_all_valid_users(self) -> list[dict]:
+        return self.model.list_all_valid_records()
 
     def cleanup_orphans(self) -> None:
         self.model.cleanup_orphans_records()
+
+    def list_all_records(self) -> list[dict]:
+        return self.model.list_all_records()
 
 
 capi_authorizer = CAPIAuthorizer(model.Model())

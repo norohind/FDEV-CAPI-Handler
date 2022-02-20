@@ -56,11 +56,11 @@ class Model:
                     'state': state
                  })
 
-    def set_nickname(self, nickname: str, state: str) -> bool:
+    def set_fid(self, fid: str, state: str) -> bool:
         """
         Return True if inserted successfully, False if catch sqlite3.IntegrityError
 
-        :param nickname:
+        :param fid:
         :param state:
         :return:
         """
@@ -68,27 +68,34 @@ class Model:
         try:
             with self.db:
                 self.db.execute(
-                    sqlite_requests.set_nickname_by_state,
-                    {'nickname': nickname, 'state': state}
+                    sqlite_requests.set_fid_by_state,
+                    {'fid': fid, 'state': state}
                 )
             return True
 
         except sqlite3.IntegrityError:
             """
             let's migrate new received data to old state
-            1. Get old state by nickname
+            1. Get old state by fid
             2. Remove row with old state
             3. Set old state where new state
             """
-            state_to_set: str = self.get_state_by_nickname(nickname)
+            state_to_set: str = self.get_state_by_fid(fid)
             self.delete_row(state_to_set)
             self.set_new_state(state_to_set, state)
             with self.db:
                 self.db.execute(
-                    sqlite_requests.set_nickname_by_state,
-                    {'nickname': nickname, 'state': state_to_set}
+                    sqlite_requests.set_fid_by_state,
+                    {'fid': fid, 'state': state_to_set}
                 )
             return False
+
+    def set_nickname(self, nickname: Union[str, None], state: str) -> None:
+        with self.db:
+            self.db.execute(
+                sqlite_requests.set_nickname_by_state,
+                {'nickname': nickname, 'state': state}
+            )
 
     def get_state_by_nickname(self, nickname: str) -> Union[None, str]:
         with self.db:
@@ -98,6 +105,15 @@ class Model:
                 return None
 
             return nickname_f1['state']
+
+    def get_state_by_fid(self, fid: str) -> Union[None, str]:
+        with self.db:
+            fid_req_dict = self.db.execute(sqlite_requests.get_state_by_fid, {'fid': fid}).fetchone()
+
+            if fid_req_dict is None:
+                return None
+
+            return fid_req_dict['state']
 
     def set_new_state(self, new_state: str, old_state: str) -> None:
         with self.db:
@@ -118,9 +134,12 @@ class Model:
 
         return token
 
-    def list_all_records(self) -> list:
+    def list_all_valid_records(self) -> list:
         return self.db.execute(sqlite_requests.select_nickname_state_all).fetchall()
 
     def cleanup_orphans_records(self) -> None:
         with self.db:
             self.db.execute(sqlite_requests.del_orphans)
+
+    def list_all_records(self) -> list[dict]:
+        return self.db.execute(sqlite_requests.select_all).fetchall()

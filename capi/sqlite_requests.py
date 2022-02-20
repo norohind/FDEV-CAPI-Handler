@@ -7,9 +7,10 @@ schema = """create table if not exists authorizations (
     refresh_token text, 
     expires_in text, 
     timestamp_got_expires_in text, 
-    nickname text unique,
+    nickname text,
     refresh_tries int default 0,
-    usages int default 0
+    usages int default 0,
+    fid text unique
 );"""
 
 insert_auth_init = """insert into authorizations 
@@ -32,9 +33,13 @@ set
     refresh_tries = 0
 where state = :state;"""
 
-set_nickname_by_state = """update authorizations set nickname = :nickname where state = :state;"""
+set_fid_by_state = """update authorizations set fid = :fid where state = :state;"""
+
+set_nickname_by_state = "update authorizations set nickname = :nickname where state = :state;"
 
 get_state_by_nickname = """select state from authorizations where nickname = :nickname;"""
+
+get_state_by_fid = """select state from authorizations where fid = :fid;"""
 
 update_state_by_state = """update authorizations set state = :new_state where state = :state;"""
 
@@ -43,11 +48,14 @@ refresh_times_increment = """update authorizations set refresh_tries = refresh_t
 get_token_for_user = """select 
     access_token, 
     timestamp_got_expires_in + expires_in as expires_on, 
-    nickname 
+    nickname,
+    fid 
 from authorizations where state = :state;"""
 
-select_nickname_state_all = """select nickname, state from authorizations where nickname is not null;"""
+select_nickname_state_all = """select nickname, fid, state from authorizations where fid is not null;"""
 
-del_orphans = """delete from authorizations where nickname is null;"""
+del_orphans = """delete from authorizations where fid is null;"""
 
 increment_usages = "update authorizations set usages = usages + 1 where state = :state;"
+
+select_all = """select * from authorizations;"""

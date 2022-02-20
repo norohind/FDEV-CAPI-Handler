@@ -1,7 +1,12 @@
 import hashlib
 import base64
+from typing import Union
+
+from EDMCLogging import get_main_logger
 import requests
 import config
+
+logger = get_main_logger()
 
 
 def get_tokens_request(code, code_verifier) -> requests.Response:
@@ -14,7 +19,8 @@ def get_tokens_request(code, code_verifier) -> requests.Response:
     """
     token_request: requests.Response = requests.post(
         url=config.TOKEN_URL,
-        headers={
+        headers=
+        {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': config.PROPER_USER_AGENT
         },
@@ -27,11 +33,39 @@ def get_tokens_request(code, code_verifier) -> requests.Response:
     return token_request
 
 
-def get_nickname(access_token: str) -> str:
-    return requests.get(
-        url='https://companion.orerve.net/profile',
-        headers={'Authorization': f'Bearer {access_token}',
-                 'User-Agent': config.PROPER_USER_AGENT}).json()["commander"]["name"]
+def get_nickname(access_token: str) -> Union[str, None]:
+    nickname = None
+    try:
+        nickname = requests.get(
+            url='https://companion.orerve.net/profile',
+            headers=
+            {
+                'Authorization': f'Bearer {access_token}',
+                'User-Agent': config.PROPER_USER_AGENT
+            }
+        ).json()["commander"]["name"]
+
+    except Exception as e:
+        logger.warning(f"Couldn't get or set nickname", exc_info=e)
+
+    return nickname
+
+
+def get_fid(access_token: str) -> str:
+    fid = None
+    try:
+        fid = requests.get(
+            url='https://auth.frontierstore.net/me',
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'User-Agent': config.PROPER_USER_AGENT
+            }
+        ).json()["customer_id"]
+
+    except Exception as e:
+        logger.exception(f"Couldn't get FID", exc_info=e)
+
+    return fid
 
 
 def refresh_request(refresh_token: str) -> requests.Response:
