@@ -1,6 +1,7 @@
 import falcon
 import waitress
 import json
+import random
 
 import capi
 from capi import capi_authorizer
@@ -123,15 +124,24 @@ class RandomToken:
     @falcon.before(check_secret)
     def on_get(self, req: falcon.request.Request, resp: falcon.response.Response):
         resp.content_type = falcon.MEDIA_JSON
-        import random
+
         list_users = capi_authorizer.list_all_valid_users()
 
         if len(list_users) == 0:
             raise falcon.HTTPNotFound(description='No users in DB')
 
-        random_user = random.choice(list_users)
+        random_user_tokens = None
 
-        resp.text = json.dumps(capi_authorizer.get_token_by_state(random_user['state']))
+        for attempt in range(0, 3):
+            random_user = random.choice(list_users)
+            random_user_tokens = capi_authorizer.get_token_by_state(random_user['state'])
+            if random_user_tokens is None or 'access_token' not in random_user_tokens:  # To be sure
+                continue
+
+        if random_user_tokens is None or 'access_token' not in random_user_tokens:
+            raise falcon.HTTPInternalServerError
+
+        resp.text = json.dumps(random_user_tokens)
 
 
 application = falcon.App()
