@@ -130,16 +130,16 @@ class RandomToken:
         if len(list_users) == 0:
             raise falcon.HTTPNotFound(description='No users in DB')
 
-        random_user_tokens = None
-
         for attempt in range(0, 3):
             random_user = random.choice(list_users)
             random_user_tokens = capi_authorizer.get_token_by_state(random_user['state'])
-            if random_user_tokens is None or 'access_token' not in random_user_tokens:  # To be sure
-                continue
+            if random_user_tokens is not None and 'access_token' in random_user_tokens:  # To be sure
+                break
 
-        if random_user_tokens is None or 'access_token' not in random_user_tokens:
+        else:
             raise falcon.HTTPInternalServerError
+
+        # if random_user_tokens is None or 'access_token' not in random_user_tokens:
 
         resp.text = json.dumps(random_user_tokens)
 
