@@ -34,7 +34,7 @@ class CAPIAuthorizer:
 
         redirect_user_to_fdev = f"{config.AUTH_URL}?" \
                                 f"audience=all&" \
-                                f"scope=capi&" \
+                                f"scope=auth%20capi&" \
                                 f"response_type=code&" \
                                 f"client_id={config.CLIENT_ID}&" \
                                 f"code_challenge={code_challenge}&" \
