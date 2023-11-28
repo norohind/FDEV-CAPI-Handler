@@ -8,8 +8,8 @@ logger = get_main_logger()
 
 
 class Model:
-    def __init__(self):
-        self.db: sqlite3.Connection = sqlite3.connect('companion-api.sqlite', check_same_thread=False)
+    def __init__(self, db_location: str):
+        self.db: sqlite3.Connection = sqlite3.connect(db_location, check_same_thread=False)
         self.db.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
         with self.db:
             self.db.execute(sqlite_requests.schema)

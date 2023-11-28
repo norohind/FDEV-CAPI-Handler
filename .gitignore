@@ -1,0 +1,5 @@
+__pycache__
+*.sqlite
+venv
+start_web_uwsgi.bash
+uwsgi.ini

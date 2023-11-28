@@ -207,4 +207,4 @@ class CAPIAuthorizer:
         return self.model.list_all_records()
 
 
-capi_authorizer = CAPIAuthorizer(model.Model())
+capi_authorizer = CAPIAuthorizer(model.Model(config.db_location))

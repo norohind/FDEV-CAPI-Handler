@@ -10,6 +10,8 @@ log_level = os.getenv('LOG_LEVEL', 'DEBUG').upper()
 
 access_key = os.getenv('access_key')
 
+db_location = os.getenv('db_location', 'companion-api.sqlite')
+
 REDIRECT_URL = requests.utils.quote(os.getenv('REDIRECT_URL', ''))
 AUTH_URL = 'https://auth.frontierstore.net/auth'
 TOKEN_URL = 'https://auth.frontierstore.net/token'
