@@ -1,5 +1,4 @@
 import falcon
-import waitress
 import json
 import random
 

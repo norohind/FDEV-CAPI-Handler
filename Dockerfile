@@ -20,6 +20,8 @@ COPY --from=builder /app/wheels /wheels
 COPY --from=builder /app/requirements.txt .
 
 RUN pip install --no-cache /wheels/*
+RUN mkdir -p /data && chown user:user /data
+
 USER user
 COPY . .
 
