@@ -114,7 +114,7 @@ class CAPIAuthorizer:
 
         return row
 
-    def refresh_by_state(self, state: str, force_refresh=False, failure_tolerance=True) -> dict:
+    def refresh_by_state(self, state: str, force_refresh=False, failure_tolerance=config.default_failure_tolerance) -> dict:
         """
 
         :param state:
