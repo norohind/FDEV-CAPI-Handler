@@ -1,6 +1,7 @@
 import sqlite3
 from typing import Union
 
+import config
 from . import sqlite_requests
 from EDMCLogging import get_main_logger
 
@@ -129,8 +130,9 @@ class Model:
     def get_token_for_user(self, state: str) -> dict:
         sql_params = {'state': state}
         token = self.db.execute(sqlite_requests.get_token_for_user, sql_params).fetchone()
-        with self.db:
-            self.db.execute(sqlite_requests.increment_usages, sql_params)
+        if not config.do_skip_token_usage_increment:
+            with self.db:
+                self.db.execute(sqlite_requests.increment_usages, sql_params)
 
         return token
 

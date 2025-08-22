@@ -6,6 +6,8 @@ from os import getenv
 CLIENT_ID = getenv('client_id')
 assert CLIENT_ID, "No client_id in env"
 
+do_skip_token_usage_increment = os.getenv('SKIP_INCREMENT', 'false').lower() in ('true', 't', '1')
+
 log_level = os.getenv('LOG_LEVEL', 'DEBUG').upper()
 
 access_key = os.getenv('access_key')
