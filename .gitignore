@@ -3,3 +3,4 @@ __pycache__
 venv
 start_web_uwsgi.bash
 uwsgi.ini
+.idea
